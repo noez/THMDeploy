@@ -20,7 +20,7 @@ angular.module('app.wizard', [
         templateUrl: 'app/wizard/wizard.html',
         controller: 'WizardCtrl'
       });
-    $urlRouterProvider.otherwise('/wizard/type');
+    $urlRouterProvider.otherwise('/');
   }])
   .controller('WizardCtrl', ['$scope', '$rootScope', '$state',
     '$sessionStorage',
@@ -229,15 +229,24 @@ angular.module('wizard.summary', [])
       }
     };
 
+    var labels = [];
+    $scope.renders = [];
+    $scope.priceTotal = $scope.order.size.priceTotal;
+
+    _.forEach($scope.labels, function (label) {
+      if(!_.isEmpty(label.render)) {
+        $scope.renders.push(label);
+        labels.push(label.render.id);
+      }
+    });
+
+    console.log($scope.renders);
+
+
+
     $scope.checkout = function () {
 
-      var labels = [];
 
-      _.forEach($scope.labels, function (label) {
-        if(!_.isEmpty(label.render)) {
-          labels.push(label.render.id);
-        }
-      });
       console.log($cookies);
       var cartData = {
           csrfmiddlewaretoken: $cookies.get('csrftoken'),
@@ -245,19 +254,21 @@ angular.module('wizard.summary', [])
           labels : labels
       };
 
-      var cartUrl = baseUrl.replace('api/' , 'basket/add/') + $scope.order.size.product.id + '/';
+      var cartUrl = baseUrl.replace('dashboard/api/' , 'basket/add/') + $scope.order.size.product.id + '/';
 
       console.log(cartData);
       console.log(cartUrl);
-     /* Oscar
+      Oscar
         .send(cartUrl,  $.param(cartData) )
         .then(function(res) {
+          delete  $sessionStorage.app;
+          delete  $sessionStorage.wizard;
           $window.location.href = "/checkout";
+
         })
         .catch(function(err) {
           console.log(err);
-        });*/
-
+        });
     }
   }]);
 
@@ -447,7 +458,8 @@ angular.module('wizard.event', [])
 
     }
 
-    if(!_.isEmpty($scope.order.labels[0].template)) {
+    if(!_.isEmpty($scope.order.labels[0].template || !_.isEmpty($scope.order.labels[0].imgOriginal) )) {
+
       for( var i = 0; i < $scope.order.labels.length; i++) {
         var cleanLabel = {
           template : {},
@@ -456,6 +468,7 @@ angular.module('wizard.event', [])
         };
         $scope.order.labels[i]= cleanLabel;
       }
+
     }
 
     $scope.selectEvent = function ( event ) {
@@ -487,8 +500,8 @@ angular.module('wizard.design', [])
   .controller('DesignCtrl', ['$scope', '$sessionStorage', 'Templates','UploadImage','UploadLabel','DesignData',function($scope, $sessionStorage, Templates,UploadImage, UploadLabel, DesignData){
 
     // defaults
-    var stepIndex = 3;
-    var isValid = false;
+    $scope.stepIndex = 3;
+    $scope.isValid = false;
 
     var callWizard = function () {
       $scope.$emit('stepToWizard', {
@@ -530,6 +543,7 @@ angular.module('wizard.design', [])
     });
 
     $scope.imageUploaded = {};
+    $scope.imageUploadedReady = false;
 
     _.assign($scope.imageUploaded, $scope.currentLabel.imgOriginal);
 
@@ -601,6 +615,28 @@ angular.module('wizard.design', [])
           });
       }
     });
+
+    $scope.fontStacks = [
+      {
+        'name': 'Arial',
+        'stack': 'sans-a'
+      },
+      {
+        'name' : 'Times New Roman',
+        'stack' : 'serif-a'
+      },
+      {
+        'name' : 'Comic Sans MS',
+        'stack' : 'sans-b'
+      },
+      {
+        'name' : 'Georgia',
+        'stack' : 'serif-b'
+      }
+    ];
+    $scope.designData.firstTl = 'Texto Primario';
+    $scope.designData.secondTl = 'Texto Secundario';
+    $scope.designData.font = $scope.fontStacks[0];
 
     $scope.nextStep = function () {
       $scope.labelBuild = true;
@@ -1671,13 +1707,13 @@ angular.module('app', [
 angular.module("app").run(["$templateCache", function($templateCache) {$templateCache.put("app/home/home.html","<div class=\"fixed-left\"><th-back-slider th-source=\"slides\" th-options=\"sliderOpts\"></th-back-slider></div><div class=\"rel-right\"><div class=\"about\"><div class=\"about-header\"><div class=\"logo\"><a ui-sref=\"home\" class=\"logo-image\">Tequila Hacienda Maravatio</a></div></div><div class=\"about-txt\"><hr><p>En Tequila Hacienda Maravatio reconocemos que existen momentos inolvidables, cosas inexplicables y personas incomparables aunado a ello queremos que estos recuerdos perduren para siempre.</p><p>Tenemos una manera única, genial y especial para que esto sea posible, ahora puedes personalizar la etiqueta de la botella de tu tequila sea blanco o reposado.</p><hr><h4 class=\"title\">Los pasos son muy sencillos</h4><span class=\"divider\"></span><ul><li>El primero es la selección del tipo de tequila.</li><li>Segundo determinar presentación y el número de botellas de tequila que requieres.</li><li>Tercero personalizar tu etiqueta en base al evento que tendras.</li><li>Por ultimo seleccionar tu forma de pago</li></ul><div class=\"text-center\"><a ui-sref=\"wizard.type\" class=\"btn btn-primary\">Personaliza ahora</a></div></div></div></div>");
 $templateCache.put("app/widgets/thImageTransform.html","<div class=\"th-image-transform\"><hr><div class=\"tfm-wrap\"><label class=\"th-label\">Arrastra para mover la imagen</label><div class=\"tfm\"><div class=\"tfm-wrap\"><div class=\"tfm-area\"></div><div class=\"tfm-inner\"><div class=\"tfm-container\"><div class=\"tfm-mask\"><img ng-src=\"{{ image.file}}\" class=\"tfm-image\"></div><img ng-src=\"{{ image.file}}\" class=\"tfm-image tfm-image-overlay\"></div></div></div><label class=\"text-center th-label\">Aumenta o Reduce el tamaño de la imagen</label><div class=\"tfm-range\"><div class=\"tfm-range-thumb\"></div><div class=\"tfm-range-track\"></div></div></div></div></div>");
 $templateCache.put("app/widgets/thLabel.html","<div class=\"label-final-image\"><div class=\"label-final-mask\"><img ng-src=\"{{ image.file }}\" ng-style=\"designData.transform\" class=\"label-final-img\" ng-class=\"designData.filter\"></div></div>");
-$templateCache.put("app/widgets/thSidebar.html","<div class=\"main-menu\" ng-class=\"{ \'collapsed\' : action }\"><div class=\"background\"></div><div class=\"thin\"><div class=\"logo\"><a class=\"logo-image\" title=\"Abrir Menú Principal\">Tequila Hacienda Maravatio</a></div><div class=\"sign-in\"><a href=\"\" title=\"Iniciar Sesión\"><span class=\"sign-in-icon\"></span></a></div></div><div class=\"wide\"><div class=\"nav-centerer\"><div class=\"logo\"><span ng-click=\"goHome()\" class=\"logo-image\">Tequila Hacienda Maravatio</span></div><span class=\"title\">Puedes personalizar los siguientes tipos de tequila.</span><ul class=\"list-unstyled type-list\"><li ng-repeat=\"type in types\" class=\"type-list-item\"><img ng-src=\"{{ type.bimage }}\" alt=\"{{ type.name }}\" height=\"200\"><br><label class=\"th-label\">{{ type.name }}</label></li></ul></div><div class=\"tequila-finder\"><span class=\"title\">Haz que ese momento perdure por siempre.</span> <button class=\"btn btn-primary\" ng-click=\"startCustom();\">Perzonaliza Ahora</button></div><div class=\"footer\"><ul class=\"list-unstyled\"><li><a href=\"\">Tienda</a></li><li><a href=\"\">Contactanos</a></li><li><a href=\"\">Términos y Condiciones</a></li><li><a href=\"\">Desarrollado por MuchaWeb</a></li></ul></div></div><div class=\"main-close-button-wrapper\"><div class=\"main-close-button\"><a href=\"#\" class=\"logo-image\">Tequila Hacienda Maravatio</a></div></div></div>");
+$templateCache.put("app/widgets/thSidebar.html","<div class=\"main-menu\" ng-class=\"{ \'collapsed\' : action }\"><div class=\"background\"></div><div class=\"thin\"><div class=\"logo\"><a class=\"logo-image\" title=\"Abrir Menú Principal\">Tequila Hacienda Maravatio</a></div><div class=\"sign-in\"><a href=\"/accounts/profile\" title=\"Iniciar Sesión\"><span class=\"sign-in-icon\"></span></a></div></div><div class=\"wide\"><div class=\"nav-centerer\"><div class=\"logo\"><span ng-click=\"goHome()\" class=\"logo-image\">Tequila Hacienda Maravatio</span></div><span class=\"title\">Puedes personalizar los siguientes tipos de tequila.</span><ul class=\"list-unstyled type-list\"><li ng-repeat=\"type in types\" class=\"type-list-item\"><img ng-src=\"{{ type.bimage }}\" alt=\"{{ type.name }}\" height=\"200\"><br><label class=\"th-label\">{{ type.name }}</label></li></ul></div><div class=\"tequila-finder\"><span class=\"title\">Haz que ese momento perdure por siempre.</span> <button class=\"btn btn-primary\" ng-click=\"startCustom();\">Perzonaliza Ahora</button></div><div class=\"footer\"><ul class=\"list-unstyled\"><li><a href=\"\">Tienda</a></li><li><a href=\"\">Contactanos</a></li><li><a href=\"\">Términos y Condiciones</a></li><li><a href=\"\">Desarrollado por MuchaWeb</a></li></ul></div></div><div class=\"main-close-button-wrapper\"><div class=\"main-close-button\"><a href=\"#\" class=\"logo-image\">Tequila Hacienda Maravatio</a></div></div></div>");
 $templateCache.put("app/widgets/thSlider.html","<div id=\"slides\" class=\"th-slides\"><ul class=\"slides-container\"><li ng-repeat=\"slide in slides\" class=\"th-slide\"><div class=\"th-slide-caption\" ng-class=\"slide.position\"><h3 class=\"th-slide-caption-title\">{{ slide.title }}</h3><p class=\"th-slide-caption-text\">{{ slide.caption }}</p><a ui-sref=\"wizard.type\" class=\"btn btn-primary\">{{slide.action}}</a></div><img ng-src=\"{{ slide.src }}\" alt=\"{{ slide.name }}\" width=\"960\" height=\"850\"></li></ul><nav class=\"slides-navigation th-slides-nav\"><a href=\"#\" class=\"next th-slides-nav-item\">Siguiente</a> <a href=\"#\" class=\"prev th-slides-nav-item\">Anterior</a></nav></div>");
 $templateCache.put("app/widgets/thTemplates.html","<div class=\"th-templates\"><label class=\"th-label\"><strong>1</strong>Seleccionar una plantilla (opcional)</label><div class=\"th-templates-wrap\"><ul class=\"list-unstyled th-templates-list\"><li ng-repeat=\"tpl in templates\" class=\"th-template-item\"><div class=\"template-block\" ng-click=\"selectTemplate(tpl);\"><img ng-src=\"{{ tpl.timage}}\" alt=\"\" height=\"120\"></div></li></ul></div></div>");
 $templateCache.put("app/widgets/thTequilaCard.html","<div class=\"th-card\"><div class=\"th-card-panel\" ng-click=\"onSelectType(type);\"><div class=\"th-card-body\"><img ng-src=\"{{ type.bimage }}\" height=\"{{ size }}\"><h2 class=\"th-card-name\">{{ type.name }}</h2></div></div></div>");
-$templateCache.put("app/wizard/design.html","<div class=\"wizard-view wizard-view-design\"><header class=\"wizard-view-header\"><h3 class=\"title\">Diseña tu etiqueta</h3></header><div class=\"wizard-view-container\"><div class=\"fixed-left\"><div class=\"label-final\"><div class=\"label-final-txt label-final-txt-first\"><span class=\"ff-stack\" ng-class=\"designData.font.stack\">{{ designData.firstTl}}</span></div><div class=\"label-final-template\"><img ng-src=\"{{ template.timage }}\" alt=\"\"></div><th-label-image th-image=\"imageUploaded\" th-label=\"labelRender\" th-build=\"labelBuild\"></th-label-image><div class=\"label-final-txt label-final-txt-second\"><span class=\"ff-stack\" ng-class=\"designData.font.stack\">{{ designData.secondTl}}</span></div><div class=\"label-final-base\"><img ng-src=\"{{ product.img_tag }}\" alt=\"\"></div></div></div><div class=\"rel-right\"><th-templates th-params=\"params\" class=\"th-template\"></th-templates><div class=\"th-upload-image\"><label class=\"th-label\"><strong>2</strong>Subir fotografía</label> <input type=\"file\" th-file-upload=\"files\" class=\"form-control\"><th-image-transform th-image=\"imageUploaded\" ng-show=\"imageUploaded\"></th-image-transform><div class=\"th-image-filters\" ng-show=\"imageUploaded\"><hr><label class=\"th-label\">Aplicar filtros a tu fotografía (opcional)</label><form><div class=\"th-filter-item\"><img src=\"static/assets/images/f-bn.png\" alt=\"Filtro Blanco y Negro\"> <span class=\"th-filter-control\"><input type=\"radio\" name=\"filter\" ng-model=\"designData.filter\" value=\"blackwhite\"> Blanco &amp;Negro</span></div><div class=\"th-filter-item\"><img src=\"static/assets/images/f-sepia.png\" alt=\"Filtro Sepia\"> <span class=\"th-filter-control\"><input type=\"radio\" name=\"filter\" ng-model=\"designData.filter\" value=\"sepia\"> Sepia</span></div><div class=\"th-filter-item\"><img src=\"static/assets/images/f-no-filter.png\" alt=\"Sin filtro\"> <span class=\"th-filter-control\"><input type=\"radio\" name=\"filter\" ng-model=\"designData.filter\" value=\"no-filter\"> Sin filtros</span></div></form></div></div><div class=\"th-headlines\"><label class=\"th-label\"><strong>3</strong> Personalizar textos</label><form class=\"form-horizontal\"><div class=\"form-group\"><label class=\"col-sm-2 control-label\">Titulo Primario:</label><div class=\"col-sm-10\"><input type=\"text\" class=\"form-control\" ng-model=\"designData.firstTl\"></div></div><div class=\"form-group\"><label class=\"col-sm-2 control-label\">Titulo Secundario:</label><div class=\"col-sm-10\"><input type=\"text\" class=\"form-control\" ng-model=\"designData.secondTl\"></div></div><div class=\"form-group\"><label class=\"col-sm-2 control-label\">Fuente:</label><div class=\"col-sm-10\"><select class=\"form-control\" ng-model=\"designData.font\" ng-options=\"font as font.name for font in fontStacks\"><option value=\"\">Seleccione</option></select></div></div></form></div><hr><button class=\"btn btn-primary\" ng-disabled=\"!isValid\" ng-click=\"nextStep()\">Siguiente</button></div></div></div><svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"><filter id=\"greyscale\"><fecolormatrix type=\"matrix\" values=\"0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0 0 0 1 0\"></fecolormatrix></filter></svg><svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"><filter id=\"old-timey\"><fecolormatrix values=\"0.14 0.45 0.05 0 0 0.12 0.39 0.04 0 0 0.08 0.28 0.03 0 0 0 0 0 1 0\"></fecolormatrix></filter></svg>");
+$templateCache.put("app/wizard/design.html","<div class=\"wizard-view wizard-view-design\"><header class=\"wizard-view-header\"><h3 class=\"title\">Diseña tu etiqueta</h3></header><div class=\"wizard-view-container\"><div class=\"fixed-left\"><div class=\"label-final\"><div class=\"label-final-txt label-final-txt-first\"><span class=\"ff-stack\" ng-class=\"designData.font.stack\">{{ designData.firstTl}}</span></div><div class=\"label-final-template\"><img ng-src=\"{{ template.timage }}\" alt=\"\"></div><th-label-image th-image=\"imageUploaded\" th-label=\"labelRender\" th-build=\"labelBuild\"></th-label-image><div class=\"label-final-txt label-final-txt-second\"><span class=\"ff-stack\" ng-class=\"designData.font.stack\">{{ designData.secondTl}}</span></div><div class=\"label-final-base\"><img ng-src=\"{{ product.img_tag }}\" alt=\"\"></div></div></div><div class=\"rel-right\"><th-templates th-params=\"params\" class=\"th-template\"></th-templates><div class=\"th-upload-image\"><label class=\"th-label\"><strong>2</strong>Subir fotografía</label> <input type=\"file\" th-file-upload=\"files\" class=\"form-control\"><th-image-transform th-image=\"imageUploaded\" ng-show=\"isValid\"></th-image-transform><div class=\"th-image-filters\" ng-show=\"isValid\"><hr><label class=\"th-label\">Aplicar filtros a tu fotografía (opcional)</label><form><div class=\"th-filter-item\"><img src=\"static/assets/images/f-bn.png\" alt=\"Filtro Blanco y Negro\"> <span class=\"th-filter-control\"><input type=\"radio\" name=\"filter\" ng-model=\"designData.filter\" value=\"blackwhite\"> Blanco &amp;Negro</span></div><div class=\"th-filter-item\"><img src=\"static/assets/images/f-sepia.png\" alt=\"Filtro Sepia\"> <span class=\"th-filter-control\"><input type=\"radio\" name=\"filter\" ng-model=\"designData.filter\" value=\"sepia\"> Sepia</span></div><div class=\"th-filter-item\"><img src=\"static/assets/images/f-no-filter.png\" alt=\"Sin filtro\"> <span class=\"th-filter-control\"><input type=\"radio\" name=\"filter\" ng-model=\"designData.filter\" value=\"no-filter\"> Sin filtros</span></div></form></div></div><div class=\"th-headlines\"><label class=\"th-label\"><strong>3</strong> Personalizar textos</label><form class=\"form-horizontal\"><div class=\"form-group\"><label class=\"col-sm-2 control-label\">Titulo Primario:</label><div class=\"col-sm-10\"><input type=\"text\" class=\"form-control\" ng-model=\"designData.firstTl\"></div></div><div class=\"form-group\"><label class=\"col-sm-2 control-label\">Titulo Secundario:</label><div class=\"col-sm-10\"><input type=\"text\" class=\"form-control\" ng-model=\"designData.secondTl\"></div></div><div class=\"form-group\"><label class=\"col-sm-2 control-label\">Fuente:</label><div class=\"col-sm-10\"><select class=\"form-control\" ng-model=\"designData.font\" ng-options=\"font as font.name for font in fontStacks\"><option value=\"\">Seleccione</option></select></div></div></form></div><hr><button class=\"btn btn-primary\" ng-disabled=\"!isValid\" ng-click=\"nextStep()\">Siguiente</button></div></div></div><svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"><filter id=\"greyscale\"><fecolormatrix type=\"matrix\" values=\"0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0 0 0 1 0\"></fecolormatrix></filter></svg><svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"><filter id=\"old-timey\"><fecolormatrix values=\"0.14 0.45 0.05 0 0 0.12 0.39 0.04 0 0 0.08 0.28 0.03 0 0 0 0 0 1 0\"></fecolormatrix></filter></svg>");
 $templateCache.put("app/wizard/events.html","<div class=\"wizard-view wizard-view-events\"><header class=\"wizard-view-header\"><h3 class=\"title\">¿Qué estamos celebrando?</h3></header><div class=\"wizard-view-container\"><ul class=\"list-unstyled event-list\"><li ng-repeat=\"event in events\" class=\"event-list-item\"><div class=\"event-block\" ng-click=\"selectEvent(event)\"><figure class=\"event-circle\"><img ng-src=\"{{ event.eventimg}}\" alt=\"\"></figure><span class=\"event-name\">{{ event.name }}</span></div></li></ul></div></div>");
 $templateCache.put("app/wizard/order.html","<div class=\"wizard-view wizard-view-order\"><header class=\"wizard-view-header\"><h3 class=\"title\">Elije el tamaño de tu botella y numero de cajas.</h3></header><div class=\"wizard-view-container\"><div class=\"fixed-left\"><figure class=\"bottle-fig text-center\"><img src=\"static/assets/images/ghots-bottle.png\" height=\"500\" ng-show=\"!product.img_zoom_size\"> <img ng-src=\"{{ product.img_zoom_size }}\" height=\"500\"></figure></div><div class=\"rel-right\"><div class=\"order-config\"><header class=\"order-config-header\"><h1 class=\"order-product-title\" ng-bind=\"product.title\"></h1><p class=\"order-product-txt\" ng-bind-html=\"product.description\"></p></header><div class=\"order-config-size\"><hr><label class=\"th-label\">Presentación</label><select ng-model=\"product\" ng-options=\"product as product.bottlesize for product in products | orderBy:\'id\'\" class=\"form-control product-size-select\"><option value=\"\">Seleccione</option></select><hr></div><div class=\"order-config-qty\"><label class=\"th-label\">Numero de cajas</label> <input type=\"text\" class=\"form-control product-qty\" ng-model=\"qty\" name=\"box\" ng-disabled=\"!product.id\"><hr></div><div class=\"order-config-price\" ng-show=\"priceTotal\"><label class=\"th-label\">Precio</label> <span class=\"product-price\">$ {{ priceTotal }} {{ productPrice.price_currency }}</span><hr></div><button class=\"btn btn-primary\" ng-disabled=\"!isValid\" ng-click=\"nextStep()\">Siguiente</button></div></div></div></div>");
-$templateCache.put("app/wizard/summary.html","<h1>SI llegaste hasta aqui chinga tu madre..</h1><br><br><br><button class=\"btn btn-primary\" ng-click=\"continueDesigning();\">Diseñar otra</button> <button class=\"btn btn-primary\" ng-click=\"checkout()\">Pasar a pagar</button>");
+$templateCache.put("app/wizard/summary.html","<div class=\"wizard-view wizard-view-summary\"><header class=\"wizard-view-header\"><h3 class=\"title\">Resumen</h3></header><div class=\"wizard-view-container\"><div class=\"th-summary\"><label class=\"th-label text-center\">Estás a muy poco de tener tu pedido personalizado es momento de revisar si lo seleccionado previamente es correcto, si no, puedes retroceder y modificarlo.</label><ul class=\"list-unstyled th-summary-renders\"><li ng-repeat=\"labelRender in renders\"><img ng-src=\"{{ labelRender.render.label }}\" alt=\"\" height=\"300\"></li></ul><div class=\"th-summary-price\"><hr><span><strong>Total:</strong>$ {{ priceTotal}}</span><hr></div><div class=\"clearfix\"><button class=\"btn btn-primary\" ng-disabled=\"!isAllowed\" ng-click=\"continueDesigning();\">Continuar personalizando</button> <button class=\"btn btn-primary pull-right\" ng-click=\"checkout()\">Pasar a pagar</button></div></div></div></div>");
 $templateCache.put("app/wizard/type.html","<div class=\"wizard-view wizard-view-types\"><header class=\"wizard-view-header\"><h3 class=\"title\">Selecciona el tequila de tu preferencia</h3></header><div class=\"wizard-view-container\"><ul class=\"list-unstyled type-list\"><li ng-repeat=\"type in types\" th-tequila-card=\"\" th-type=\"type\" th-size=\"400\" th-selected=\"selected(type)\" class=\"type-list-item\"></li></ul></div></div>");
-$templateCache.put("app/wizard/wizard.html","<div class=\"wizard\"><header class=\"wizard-header\"><nav class=\"nav-steps\"><ul class=\"list-unstyled steps-list\"><li class=\"steps-list-item\" ng-repeat=\"step in wizard.steps\"><th-wizard-step step=\"step\" step-valid=\"step.valid\" step-ref=\"wizard.{{ step.ref }}\"></th-wizard-step></li><span>{{wizard.active}}</span></ul></nav></header><div class=\"wizard-container\" ui-view=\"\"></div></div>");}]);
+$templateCache.put("app/wizard/wizard.html","<div class=\"wizard\"><header class=\"wizard-header\"><nav class=\"nav-steps\"><ul class=\"list-unstyled steps-list\"><li class=\"steps-list-item\" ng-repeat=\"step in wizard.steps\"><th-wizard-step step=\"step\" step-valid=\"step.valid\" step-ref=\"wizard.{{ step.ref }}\"></th-wizard-step></li></ul></nav></header><div class=\"wizard-container\" ui-view=\"\"></div></div>");}]);
