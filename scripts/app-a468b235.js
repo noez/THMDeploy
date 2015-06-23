@@ -1534,7 +1534,6 @@ angular.module('app.services')
   .factory('Oscar', ['$http',  '$q', function($http,  $q){
     return {
       send : function (url, data) {
-        console.log('sevice says ' + typeof data);
         var defered = $q.defer(),
           promise = defered.promise;
 
@@ -1551,7 +1550,6 @@ angular.module('app.services')
           .error(function(err) {
             defered.reject(err);
           });
-        console.log($http.defaults);
         return promise;
       }
     };
