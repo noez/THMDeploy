@@ -209,6 +209,8 @@ angular.module('wizard.summary', [])
   }])
   .controller('SummaryCtrl', ['$scope','$state','$sessionStorage','$cookies','$window', 'baseUrl', 'Oscar' ,function($scope, $state, $sessionStorage, $cookies, $window, baseUrl, Oscar){
 
+    var labels = [];
+
     if (!_.has($sessionStorage, 'app')) {
       $state.go('home');
     }else {
@@ -216,6 +218,17 @@ angular.module('wizard.summary', [])
       $scope.labels = $scope.order.labels;
       $scope.cycle = $scope.order.cycle;
       $scope.isAllowed = true;
+
+      $scope.renders = [];
+      $scope.priceTotal = $scope.order.size.priceTotal;
+
+      _.forEach($scope.labels, function (label) {
+        if(!_.isEmpty(label.render)) {
+          $scope.renders.push(label);
+          labels.push(label.render.id);
+        }
+      });
+
     }
 
     $scope.continueDesigning = function () {
@@ -234,25 +247,8 @@ angular.module('wizard.summary', [])
       }
     };
 
-    var labels = [];
-    $scope.renders = [];
-    $scope.priceTotal = $scope.order.size.priceTotal;
-
-    _.forEach($scope.labels, function (label) {
-      if(!_.isEmpty(label.render)) {
-        $scope.renders.push(label);
-        labels.push(label.render.id);
-      }
-    });
-
-    console.log($scope.renders);
-
-
-
     $scope.checkout = function () {
 
-
-      console.log($cookies);
       var cartData = {
           csrfmiddlewaretoken: $cookies.get('csrftoken'),
           quantity: $scope.order.size.qty,
@@ -261,8 +257,6 @@ angular.module('wizard.summary', [])
 
       var cartUrl = baseUrl.replace('dashboard/api/' , 'basket/add/') + $scope.order.size.product.id + '/';
 
-      console.log(cartData);
-      console.log(cartUrl);
       Oscar
         .send(cartUrl,  $.param(cartData) )
         .then(function(res) {
