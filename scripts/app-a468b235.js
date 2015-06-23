@@ -208,10 +208,15 @@ angular.module('wizard.summary', [])
     $urlRouterProvider.otherwise('/');
   }])
   .controller('SummaryCtrl', ['$scope','$state','$sessionStorage','$cookies','$window', 'baseUrl', 'Oscar' ,function($scope, $state, $sessionStorage, $cookies, $window, baseUrl, Oscar){
-    $scope.order = $sessionStorage.app.order;
-    $scope.labels = $scope.order.labels;
-    $scope.cycle = $scope.order.cycle;
-    $scope.isAllowed = true;
+
+    if (!_.has($sessionStorage, 'app')) {
+      $state.go('home');
+    }else {
+      $scope.order = $sessionStorage.app.order;
+      $scope.labels = $scope.order.labels;
+      $scope.cycle = $scope.order.cycle;
+      $scope.isAllowed = true;
+    }
 
     $scope.continueDesigning = function () {
       if($scope.cycle.index < $scope.cycle.length) {
@@ -228,10 +233,6 @@ angular.module('wizard.summary', [])
         $state.go('wizard.design');
       }
     };
-
-    if (!_.has($sessionStorage, 'app')) {
-      $state.go('home');
-    }
 
     var labels = [];
     $scope.renders = [];
