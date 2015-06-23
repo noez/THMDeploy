@@ -229,6 +229,10 @@ angular.module('wizard.summary', [])
       }
     };
 
+    if (!_.has($sessionStorage, 'app')) {
+      $state.go('home');
+    }
+
     var labels = [];
     $scope.renders = [];
     $scope.priceTotal = $scope.order.size.priceTotal;
